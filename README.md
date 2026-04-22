@@ -64,6 +64,47 @@ python -m pip install -e '.[dev]'
 
 `ffmpeg` должен быть установлен в системе и доступен как `ffmpeg`, либо его путь нужно указать через `ffmpeg_bin` в конфиге.
 
+## Системные Требования
+
+Короткий ответ:
+
+- если у вас обычный современный 64-bit ноутбук или ПК без дискретной видеокарты, проект обычно запустится и на `Silero`, и на `Piper`;
+- `Silero` является дефолтным движком и нормально работает в CPU-only режиме, но на слабом железе длинные документы будут обрабатываться заметно дольше;
+- `Piper` обычно проще использовать на слабых CPU, особенно с голосами уровня `x_low`, `low` или `medium`;
+- GPU не обязателен ни для проекта в целом, ни для стандартного сценария запуска, но может ускорять `Silero`, а для `Piper` GPU-путь является отдельным и необязательным сценарием через `onnxruntime-gpu`.
+
+Практический ориентир:
+
+- `минимум`: современный 64-bit CPU, Python `3.11+`, `ffmpeg`, CPU-only запуск;
+- `рекомендуется`: 4+ CPU cores для регулярной озвучки коротких и средних документов;
+- `комфортно`: 6-8+ быстрых CPU cores или совместимый GPU для длинных документов и частых прогонов.
+
+Подробная разбивка по `Silero` и `Piper`, официальные источники, ограничения и команды для self-check лежат в [docs/SYSTEM_REQUIREMENTS.md](/home/andy/github.com/andy-ahmedov/speech/docs/SYSTEM_REQUIREMENTS.md).
+
+Быстрый self-check на своем железе:
+
+```bash
+cd /home/andy/github.com/andy-ahmedov/speech
+. .venv/bin/activate
+/usr/bin/time -f 'elapsed=%E cpu=%P maxrss=%MKB' \
+  python -m pdf_tts_ru.cli synth \
+  --input VPG_5.pdf \
+  --pages 1 \
+  --config examples/silero.config.toml
+```
+
+```bash
+cd /home/andy/github.com/andy-ahmedov/speech
+. .venv/bin/activate
+/usr/bin/time -f 'elapsed=%E cpu=%P maxrss=%MKB' \
+  python -m pdf_tts_ru.cli synth \
+  --input VPG_5.pdf \
+  --pages 1 \
+  --config examples/piper.config.toml
+```
+
+Первый прогон может быть медленнее из-за загрузки модели или прогрева кэшей, поэтому скорость имеет смысл сравнивать как минимум со второго запуска.
+
 ## Запуск Через Silero
 
 Silero теперь является дефолтным движком проекта. Для него не нужен `voice_model`, а базовая установка проекта уже включает его runtime-зависимости.
