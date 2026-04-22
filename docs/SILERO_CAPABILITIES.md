@@ -2,7 +2,7 @@
 
 Этот файл описывает, как именно `silero` используется в текущем проекте `pdf-tts-ru`, что в нем можно настраивать, что влияет на качество речи, а что влияет только на скорость работы.
 
-Если нужен именно ответ на вопрос про железо, CPU/GPU и ожидания по времени выполнения, см. [docs/SYSTEM_REQUIREMENTS.md](/home/andy/github.com/andy-ahmedov/speech/docs/SYSTEM_REQUIREMENTS.md).
+Если нужен именно ответ на вопрос про железо, CPU/GPU и ожидания по времени выполнения, см. [docs/SYSTEM_REQUIREMENTS.md](/home/andy/github.com/andy-ahmedov/sayit/docs/SYSTEM_REQUIREMENTS.md).
 
 ## Главное Разделение: Silero И Torch
 
@@ -110,7 +110,7 @@ silero_speaker = "xenia"
 Пример запуска с другим голосом:
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/speech
+cd /home/andy/github.com/andy-ahmedov/sayit
 . .venv/bin/activate
 python -m pdf_tts_ru.cli synth \
   --input VPG_5.pdf \
@@ -208,7 +208,7 @@ silero_device = "cuda"
 CPU-only:
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/speech
+cd /home/andy/github.com/andy-ahmedov/sayit
 . .venv/bin/activate
 python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
 python -m pip install -e .
@@ -217,7 +217,7 @@ python -m pip install -e .
 Обычный путь, если подходит базовая установка проекта:
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/speech
+cd /home/andy/github.com/andy-ahmedov/sayit
 . .venv/bin/activate
 python -m pip install -e '.[dev]'
 ```
@@ -264,7 +264,7 @@ silero_device = "cpu"
 Пример запуска:
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/speech
+cd /home/andy/github.com/andy-ahmedov/sayit
 . .venv/bin/activate
 python -m pdf_tts_ru.cli synth \
   --input VPG_5.pdf \
@@ -297,7 +297,7 @@ python -m pdf_tts_ru.cli synth \
 Пример запуска:
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/speech
+cd /home/andy/github.com/andy-ahmedov/sayit
 . .venv/bin/activate
 python -m pdf_tts_ru.cli synth \
   --input VPG_5.pdf \
@@ -347,7 +347,7 @@ silero_device = "cpu"
 Пример запуска:
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/speech
+cd /home/andy/github.com/andy-ahmedov/sayit
 . .venv/bin/activate
 python -m pdf_tts_ru.cli synth \
   --input VPG_5.pdf \
@@ -380,7 +380,7 @@ python -m pdf_tts_ru.cli synth \
 Пример запуска:
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/speech
+cd /home/andy/github.com/andy-ahmedov/sayit
 . .venv/bin/activate
 python -m pdf_tts_ru.cli synth \
   --input VPG_5.pdf \
@@ -411,7 +411,7 @@ python -m pdf_tts_ru.cli synth \
 Пример:
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/speech
+cd /home/andy/github.com/andy-ahmedov/sayit
 . .venv/bin/activate
 python -m pdf_tts_ru.cli synth \
   --input VPG_5.pdf \
@@ -428,7 +428,7 @@ python -m pdf_tts_ru.cli synth \
 Потом тем же способом:
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/speech
+cd /home/andy/github.com/andy-ahmedov/sayit
 . .venv/bin/activate
 python -m pdf_tts_ru.cli synth \
   --input VPG_5.pdf \
@@ -461,7 +461,7 @@ Silero использует тот же extraction pipeline, что и Piper, п
 Пример:
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/speech
+cd /home/andy/github.com/andy-ahmedov/sayit
 . .venv/bin/activate
 python -m pdf_tts_ru.cli synth \
   --input VPG_5.pdf \
@@ -483,7 +483,7 @@ python -m pdf_tts_ru.cli synth \
 Пример:
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/speech
+cd /home/andy/github.com/andy-ahmedov/sayit
 . .venv/bin/activate
 python -m pdf_tts_ru.cli synth \
   --input VPG_5.pdf \
@@ -575,5 +575,5 @@ silero_device = "cpu"
 
 Для практического запуска в проекте смотри также:
 
-- [README.md](/home/andy/github.com/andy-ahmedov/speech/README.md)
-- [examples/silero.config.toml](/home/andy/github.com/andy-ahmedov/speech/examples/silero.config.toml)
+- [README.md](/home/andy/github.com/andy-ahmedov/sayit/README.md)
+- [examples/silero.config.toml](/home/andy/github.com/andy-ahmedov/sayit/examples/silero.config.toml)
