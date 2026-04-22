@@ -11,7 +11,7 @@
 
 ### Minimum
 
-- `Official`: Python `>=3.11` требуется самим проектом по [pyproject.toml](/home/andy/github.com/andy-ahmedov/sayit/pyproject.toml).
+- `Official`: Python `>=3.11` требуется самим проектом по [pyproject.toml](../pyproject.toml).
 - `Official`: нужен установленный `ffmpeg`, потому что проект конвертирует и склеивает аудио через `ffmpeg`.
 - `Official`: проект рассчитан на born-digital документы `.pdf`, `.docx`, `.md`, `.txt`; OCR не является happy path.
 - `Repo guidance`: GPU не нужен для самого проекта как обязательный компонент.
@@ -168,7 +168,7 @@
 ### 1. Silero CPU-only
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/sayit
+cd /path/to/sayit
 . .venv/bin/activate
 /usr/bin/time -f 'elapsed=%E cpu=%P maxrss=%MKB' \
   python -m pdf_tts_ru.cli synth \
@@ -180,7 +180,7 @@ cd /home/andy/github.com/andy-ahmedov/sayit
 ### 2. Silero CUDA
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/sayit
+cd /path/to/sayit
 . .venv/bin/activate
 /usr/bin/time -f 'elapsed=%E cpu=%P maxrss=%MKB' \
   python -m pdf_tts_ru.cli synth \
@@ -204,7 +204,7 @@ cd /home/andy/github.com/andy-ahmedov/sayit
 ### 3. Piper
 
 ```bash
-cd /home/andy/github.com/andy-ahmedov/sayit
+cd /path/to/sayit
 . .venv/bin/activate
 /usr/bin/time -f 'elapsed=%E cpu=%P maxrss=%MKB' \
   python -m pdf_tts_ru.cli synth \
