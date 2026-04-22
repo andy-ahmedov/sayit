@@ -27,6 +27,7 @@ For non-trivial tasks:
 4. Add or update tests.
 5. Run verification commands.
 6. Update docs if behavior changed.
+7. If the change is green and nothing is broken, split the work into logical commits, use clear commit messages, and push them to `origin`.
 
 ## Architecture expectations
 
@@ -123,7 +124,15 @@ A task is not done until:
 1. code is implemented;
 2. tests relevant to the change exist and pass;
 3. docs are updated if behavior changed;
-4. the result matches the CLI / README contract.
+4. the result matches the CLI / README contract;
+5. successful changes are committed in logical chunks and pushed.
+
+## Git workflow expectations
+
+- After each completed change, if verification is green, create one or more logical commits instead of one large dump commit.
+- Commit messages should describe the actual change clearly and concretely.
+- Push successful commits to `origin` in the same task unless the user explicitly asks not to.
+- Do not commit or push broken work.
 
 ## Skills
 

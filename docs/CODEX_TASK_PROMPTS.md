@@ -7,6 +7,7 @@ Read README.md, AGENTS.md, docs/ARCHITECTURE.md and the skills in .agents/skills
 Do not code yet.
 Build a concrete implementation plan for v1 of this repository.
 Break it into small steps with risks, dependencies, and verification commands.
+If the implementation is completed successfully, split it into logical commits with clear messages and push to origin.
 ```
 
 ## 2. Implement page range parsing and CLI skeleton
@@ -20,6 +21,7 @@ Requirements:
 - do not implement OCR
 - update docs if behavior changes
 Run verification commands after changes.
+If everything is green, make logical commits and push them.
 ```
 
 ## 3. Implement PDF extraction layer
@@ -33,6 +35,7 @@ Requirements:
 - do not yet optimize for scans
 - add tests where possible
 Run verification commands after changes.
+If everything is green, make logical commits and push them.
 ```
 
 ## 4. Implement Piper adapter
@@ -47,6 +50,7 @@ Requirements:
 - add clear errors for missing voice model
 - add tests/mocks where possible
 Run verification commands after changes.
+If everything is green, make logical commits and push them.
 ```
 
 ## 5. Implement ffmpeg export
@@ -60,6 +64,7 @@ Requirements:
 - keep filenames deterministic
 - add tests for command construction if real ffmpeg is not used in tests
 Run verification commands after changes.
+If everything is green, make logical commits and push them.
 ```
 
 ## 6. End-to-end verification
@@ -70,4 +75,5 @@ Find missing pieces for a real v1.
 Then implement the smallest set of changes needed to make the repo coherent.
 Add/update tests and docs.
 Run verification commands.
+If everything is green, make logical commits and push them.
 ```
