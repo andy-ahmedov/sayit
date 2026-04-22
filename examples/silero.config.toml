@@ -1,0 +1,17 @@
+engine = "silero"
+output_dir = "output"
+ffmpeg_bin = "ffmpeg"
+output_format = "mp3"
+split_mode = "merged"
+table_strategy = "inline"
+announce_page_numbers = true
+pause_between_pages_ms = 700
+silero_model_id = "v5_5_ru"
+silero_speaker = "xenia"
+silero_sample_rate = 48000
+silero_device = "cpu"
+silero_line_break_mode = "smart"
+silero_transliterate_latin = true
+silero_verbalize_numbers = true
+silero_spell_cyrillic_abbreviations = true
+silero_expand_short_units = true

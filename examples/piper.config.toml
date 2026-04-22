@@ -1,0 +1,12 @@
+engine = "piper"
+voice_model = "voices/ru_RU-dmitri-medium.onnx"
+output_dir = "output"
+ffmpeg_bin = "ffmpeg"
+output_format = "mp3"
+split_mode = "merged"
+table_strategy = "inline"
+announce_page_numbers = true
+pause_between_pages_ms = 700
+length_scale = 1.3
+noise_scale = 0.667
+noise_w_scale = 0.8

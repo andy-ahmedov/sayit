@@ -1,0 +1,47 @@
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.codex/
+tests/__pycache__/
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+config.toml
+voices/
+*.wav
+*.mp3
+*.m4a
+.DS_Store
+
+# Root-level local input files for manual synthesis runs.
+# Keep only the canonical sample PDF in the repository root.
+/*.pdf
+/*.md
+/*.txt
+/*.docx
+/*.doc
+/*.yml
+!/README.md
+!/AGENTS.md
+!/VPG_5.pdf
+!/pyproject.toml
+!/.gitignore
+
+# Generated audio artifacts: keep only a few VPG_5 demo outputs.
+output/**
+!output/
+!output/VPG_5_merged_pages_0001-0023.mp3
+
+output_silero_linebreak_check/**
+!output_silero_linebreak_check/
+!output_silero_linebreak_check/VPG_5_merged_page_0001.mp3
+
+output_silero_smoke/**
+!output_silero_smoke/
+!output_silero_smoke/VPG_5_merged_page_0001.mp3
