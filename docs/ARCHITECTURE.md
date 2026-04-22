@@ -27,7 +27,7 @@ Coordinates the whole flow.
 ## First implementation target
 
 ```text
-Input document -> selected logical pages -> normalized page text -> Piper/Silero WAV -> ffmpeg export
+Input document -> selected logical pages -> normalized page text -> Silero/Piper WAV -> ffmpeg export
 ```
 
 ## Future extensions

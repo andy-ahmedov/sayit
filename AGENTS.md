@@ -10,7 +10,7 @@ The user will use Codex to implement the project incrementally.
 1. Primary input is a **clean born-digital PDF**, not a scan.
 2. Primary output is local audio: `wav`, `mp3`, `m4a`.
 3. Primary language is **Russian**.
-4. Default TTS engine is **Piper**.
+4. Default TTS engine is **Silero**.
 5. Default PDF extraction is **PyMuPDF**.
 6. Audio export / concatenation is done with **ffmpeg**.
 7. Do not introduce OCR in the main happy path.

@@ -209,19 +209,18 @@ CPU-only:
 cd /home/andy/github.com/andy-ahmedov/speech
 . .venv/bin/activate
 python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
-python -m pip install silero
 python -m pip install -e .
 ```
 
-Или через extra:
+Обычный путь, если подходит базовая установка проекта:
 
 ```bash
 cd /home/andy/github.com/andy-ahmedov/speech
 . .venv/bin/activate
-python -m pip install -e '.[silero]'
+python -m pip install -e '.[dev]'
 ```
 
-Это нужно для работы Silero, но не для "улучшения голоса" как такового.
+Legacy-aliас `.[silero]` тоже остается рабочим, но он больше не обязателен: Silero теперь входит в базовую установку проекта.
 
 ## Практические Сценарии Использования Silero
 

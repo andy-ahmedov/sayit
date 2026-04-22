@@ -2,7 +2,7 @@
 
 Локальный пайплайн для озвучки русскоязычных документов в аудиофайлы `wav`, `mp3`, `m4a`.
 
-Лучше всего проект поддерживает "чистые" born-digital PDF, где текст уже есть внутри документа. Также поддерживаются входные файлы `.docx`, `.md`, `.txt`. Основной путь извлечения PDF идет через PyMuPDF, основной TTS-движок по умолчанию это Piper, дополнительный локальный вариант это Silero TTS.
+Лучше всего проект поддерживает "чистые" born-digital PDF, где текст уже есть внутри документа. Также поддерживаются входные файлы `.docx`, `.md`, `.txt`. Основной путь извлечения PDF идет через PyMuPDF, основной TTS-движок по умолчанию это Silero, дополнительный локальный вариант это Piper.
 
 ## Что уже умеет
 
@@ -64,127 +64,9 @@ python -m pip install -e '.[dev]'
 
 `ffmpeg` должен быть установлен в системе и доступен как `ffmpeg`, либо его путь нужно указать через `ffmpeg_bin` в конфиге.
 
-## Запуск Через Piper
-
-Piper остается дефолтным движком. Для него нужен ONNX-файл голоса и sidecar-конфиг `*.onnx.json` рядом с ним.
-
-### 1. Установить зависимости и скачать голос
-
-```bash
-cd /home/andy/github.com/andy-ahmedov/speech
-. .venv/bin/activate
-python -m pip install -e '.[dev]'
-python -m piper.download_voices ru_RU-dmitri-medium
-```
-
-После загрузки обычно появляется файл вида:
-
-```text
-voices/ru_RU-dmitri-medium.onnx
-voices/ru_RU-dmitri-medium.onnx.json
-```
-
-### 2. Пример конфига
-
-Готовый пример лежит в [examples/piper.config.toml](/home/andy/github.com/andy-ahmedov/speech/examples/piper.config.toml).
-
-```toml
-engine = "piper"
-voice_model = "voices/ru_RU-dmitri-medium.onnx"
-output_dir = "output"
-ffmpeg_bin = "ffmpeg"
-output_format = "mp3"
-split_mode = "merged"
-table_strategy = "inline"
-announce_page_numbers = true
-pause_between_pages_ms = 700
-length_scale = 1.3
-noise_scale = 0.667
-noise_w_scale = 0.8
-```
-
-### 3. Примеры запуска
-
-Инспекция документа:
-
-```bash
-cd /home/andy/github.com/andy-ahmedov/speech
-. .venv/bin/activate
-python -m pdf_tts_ru.cli inspect --input VPG_5.pdf
-```
-
-Озвучка через конфиг:
-
-```bash
-cd /home/andy/github.com/andy-ahmedov/speech
-. .venv/bin/activate
-python -m pdf_tts_ru.cli synth \
-  --input VPG_5.pdf \
-  --pages all \
-  --config examples/piper.config.toml
-```
-
-Озвучка через CLI без конфига:
-
-```bash
-cd /home/andy/github.com/andy-ahmedov/speech
-. .venv/bin/activate
-python -m pdf_tts_ru.cli synth \
-  --input VPG_5.pdf \
-  --pages 1-3 \
-  --engine piper \
-  --voice voices/ru_RU-dmitri-medium.onnx \
-  --split merged \
-  --format mp3 \
-  --table-strategy inline \
-  --announce-page-numbers \
-  --pause-between-pages-ms 700 \
-  --length-scale 1.3
-```
-
-Режим "по файлу на страницу":
-
-```bash
-cd /home/andy/github.com/andy-ahmedov/speech
-. .venv/bin/activate
-python -m pdf_tts_ru.cli synth \
-  --input VPG_5.pdf \
-  --pages 1,2,3 \
-  --engine piper \
-  --voice voices/ru_RU-dmitri-medium.onnx \
-  --split per-page \
-  --format wav \
-  --output-dir output_piper_pages
-```
-
-Озвучка `.docx`:
-
-```bash
-cd /home/andy/github.com/andy-ahmedov/speech
-. .venv/bin/activate
-python -m pdf_tts_ru.cli synth \
-  --input notes.docx \
-  --pages all \
-  --config examples/piper.config.toml
-```
-
-Озвучка `.md` или `.txt`:
-
-```bash
-cd /home/andy/github.com/andy-ahmedov/speech
-. .venv/bin/activate
-python -m pdf_tts_ru.cli synth \
-  --input klinika.md \
-  --pages 1 \
-  --engine piper \
-  --voice voices/ru_RU-dmitri-medium.onnx \
-  --split per-page \
-  --format mp3
-```
-
 ## Запуск Через Silero
 
-Silero подключен как дополнительный движок. Для него не нужен `voice_model`, но нужны `torch` и пакет `silero`.
+Silero теперь является дефолтным движком проекта. Для него не нужен `voice_model`, а базовая установка проекта уже включает его runtime-зависимости.
 
 В `smart`-режиме Silero сглаживает технические переносы строк без пунктуации, но сохраняет абзацы, списки и паузы после знаков препинания. Также он может читать кириллические аббревиатуры по буквам и разворачивать короткие единицы измерения вроде `нм`, `мм`, `мг`.
 
@@ -192,21 +74,20 @@ Silero подключен как дополнительный движок. Дл
 
 ### 1. Установить зависимости
 
-Простой путь:
+Базовый путь:
 
 ```bash
 cd /home/andy/github.com/andy-ahmedov/speech
 . .venv/bin/activate
-python -m pip install -e '.[silero]'
+python -m pip install -e '.[dev]'
 ```
 
-Если нужен CPU-only PyTorch:
+Если нужен отдельный CPU-only PyTorch:
 
 ```bash
 cd /home/andy/github.com/andy-ahmedov/speech
 . .venv/bin/activate
 python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
-python -m pip install silero
 python -m pip install -e .
 ```
 
@@ -237,6 +118,14 @@ silero_expand_short_units = true
 ```
 
 ### 3. Примеры запуска
+
+Инспекция документа:
+
+```bash
+cd /home/andy/github.com/andy-ahmedov/speech
+. .venv/bin/activate
+python -m pdf_tts_ru.cli inspect --input VPG_5.pdf
+```
 
 Озвучка через конфиг:
 
@@ -328,6 +217,116 @@ python -m pdf_tts_ru.cli synth \
   --format mp3
 ```
 
+## Запуск Через Piper
+
+Piper остается полностью поддержанным альтернативным движком. Для него нужен ONNX-файл голоса и sidecar-конфиг `*.onnx.json` рядом с ним.
+
+### 1. Установить зависимости и скачать голос
+
+```bash
+cd /home/andy/github.com/andy-ahmedov/speech
+. .venv/bin/activate
+python -m pip install -e '.[dev]'
+python -m piper.download_voices ru_RU-dmitri-medium
+```
+
+После загрузки обычно появляется файл вида:
+
+```text
+voices/ru_RU-dmitri-medium.onnx
+voices/ru_RU-dmitri-medium.onnx.json
+```
+
+### 2. Пример конфига
+
+Готовый пример лежит в [examples/piper.config.toml](/home/andy/github.com/andy-ahmedov/speech/examples/piper.config.toml).
+
+```toml
+engine = "piper"
+voice_model = "voices/ru_RU-dmitri-medium.onnx"
+output_dir = "output"
+ffmpeg_bin = "ffmpeg"
+output_format = "mp3"
+split_mode = "merged"
+table_strategy = "inline"
+announce_page_numbers = true
+pause_between_pages_ms = 700
+length_scale = 1.3
+noise_scale = 0.667
+noise_w_scale = 0.8
+```
+
+### 3. Примеры запуска
+
+Озвучка через конфиг:
+
+```bash
+cd /home/andy/github.com/andy-ahmedov/speech
+. .venv/bin/activate
+python -m pdf_tts_ru.cli synth \
+  --input VPG_5.pdf \
+  --pages all \
+  --config examples/piper.config.toml
+```
+
+Озвучка через CLI без конфига:
+
+```bash
+cd /home/andy/github.com/andy-ahmedov/speech
+. .venv/bin/activate
+python -m pdf_tts_ru.cli synth \
+  --input VPG_5.pdf \
+  --pages 1-3 \
+  --engine piper \
+  --voice voices/ru_RU-dmitri-medium.onnx \
+  --split merged \
+  --format mp3 \
+  --table-strategy inline \
+  --announce-page-numbers \
+  --pause-between-pages-ms 700 \
+  --length-scale 1.3
+```
+
+Режим "по файлу на страницу":
+
+```bash
+cd /home/andy/github.com/andy-ahmedov/speech
+. .venv/bin/activate
+python -m pdf_tts_ru.cli synth \
+  --input VPG_5.pdf \
+  --pages 1,2,3 \
+  --engine piper \
+  --voice voices/ru_RU-dmitri-medium.onnx \
+  --split per-page \
+  --format wav \
+  --output-dir output_piper_pages
+```
+
+Озвучка `.docx`:
+
+```bash
+cd /home/andy/github.com/andy-ahmedov/speech
+. .venv/bin/activate
+python -m pdf_tts_ru.cli synth \
+  --input notes.docx \
+  --pages all \
+  --config examples/piper.config.toml
+```
+
+Озвучка `.md` или `.txt`:
+
+```bash
+cd /home/andy/github.com/andy-ahmedov/speech
+. .venv/bin/activate
+python -m pdf_tts_ru.cli synth \
+  --input klinika.md \
+  --pages 1 \
+  --engine piper \
+  --voice voices/ru_RU-dmitri-medium.onnx \
+  --split per-page \
+  --format mp3
+```
+
 ## Примеры Конфигов
 
 В каталоге `examples/` есть готовые шаблоны:
@@ -336,7 +335,7 @@ python -m pdf_tts_ru.cli synth \
 - [silero.config.toml](/home/andy/github.com/andy-ahmedov/speech/examples/silero.config.toml)
 - [config.example.toml](/home/andy/github.com/andy-ahmedov/speech/examples/config.example.toml)
 
-`config.example.toml` оставлен как общий смешанный шаблон, а для практического запуска удобнее использовать отдельные конфиги под конкретный движок.
+`config.example.toml` теперь отражает дефолтный Silero-сценарий, а для практического запуска под конкретный движок удобнее использовать отдельные конфиги.
 
 ## Полезные Параметры
 

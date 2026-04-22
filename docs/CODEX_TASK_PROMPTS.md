@@ -44,7 +44,7 @@ If everything is green, make logical commits and push them.
 Implement a pluggable TTS interface and a Piper engine adapter.
 Requirements:
 - engine interface must be swappable later
-- Piper is the default implementation
+- Silero is the default implementation
 - write WAV first
 - make voice path configurable
 - add clear errors for missing voice model
