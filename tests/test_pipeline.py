@@ -40,6 +40,7 @@ def test_pipeline_per_page_creates_page_and_table_outputs(tmp_path: Path) -> Non
         pages=[2],
         split_mode=SplitMode.PER_PAGE,
         output_format=OutputFormat.WAV,
+        engine=TtsEngineKind.PIPER,
         voice_model=Path("unused.onnx"),
         table_strategy=TableStrategy.SEPARATE,
         tts_settings=PiperSynthesisSettings(),
@@ -62,6 +63,7 @@ def test_pipeline_merged_inserts_pause_between_pages(tmp_path: Path) -> None:
         pages=[1, 2],
         split_mode=SplitMode.MERGED,
         output_format=OutputFormat.WAV,
+        engine=TtsEngineKind.PIPER,
         voice_model=Path("unused.onnx"),
         table_strategy=TableStrategy.SKIP,
         pause_between_pages_ms=200,
@@ -111,6 +113,7 @@ def test_pipeline_normalizes_text_before_tts(tmp_path: Path) -> None:
         pages=[1],
         split_mode=SplitMode.PER_PAGE,
         output_format=OutputFormat.WAV,
+        engine=TtsEngineKind.PIPER,
         voice_model=Path("unused.onnx"),
         table_strategy=TableStrategy.SKIP,
         announce_page_numbers=True,
@@ -131,6 +134,7 @@ def test_pipeline_supports_text_input(tmp_path: Path) -> None:
         pages=[1],
         split_mode=SplitMode.PER_PAGE,
         output_format=OutputFormat.WAV,
+        engine=TtsEngineKind.PIPER,
         voice_model=Path("unused.onnx"),
         table_strategy=TableStrategy.SKIP,
         tts_settings=PiperSynthesisSettings(),
@@ -139,6 +143,30 @@ def test_pipeline_supports_text_input(tmp_path: Path) -> None:
     outputs = PdfTtsPipeline(engine=FakeEngine()).run(request)
 
     assert outputs == [tmp_path / "out" / "sample_page_0001.wav"]
+
+
+def test_pipeline_uses_silero_as_default_engine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    pdf_path = create_prose_pdf(tmp_path / "sample.pdf")
+    request = SynthesisRequest(
+        input_path=pdf_path,
+        output_dir=tmp_path / "out",
+        pages=[1],
+        split_mode=SplitMode.PER_PAGE,
+        output_format=OutputFormat.WAV,
+        table_strategy=TableStrategy.SKIP,
+        silero_settings=SileroSynthesisSettings(),
+    )
+    created_for: list[TtsEngineKind] = []
+
+    def fake_create_tts_engine(resolved_request: SynthesisRequest) -> FakeEngine:
+        created_for.append(resolved_request.engine)
+        return FakeEngine()
+
+    monkeypatch.setattr("pdf_tts_ru.pipeline.create_tts_engine", fake_create_tts_engine)
+
+    PdfTtsPipeline().run(request)
+
+    assert created_for == [TtsEngineKind.SILERO]
 
 
 def create_prose_pdf(path: Path) -> Path:

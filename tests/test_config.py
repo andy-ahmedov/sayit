@@ -79,6 +79,16 @@ def test_load_synthesis_config_rejects_unknown_keys(tmp_path: Path) -> None:
         load_synthesis_config(config_path)
 
 
+def test_load_synthesis_config_defaults_to_silero_when_engine_is_omitted(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text('output_dir = "audio"\n', encoding="utf-8")
+
+    config = load_synthesis_config(config_path)
+
+    assert config.engine == TtsEngineKind.SILERO
+    assert config.output_dir == Path("audio")
+
+
 def test_resolve_synthesis_request_prefers_cli_values() -> None:
     request = resolve_synthesis_request(
         input_path=Path("book.pdf"),
@@ -144,9 +154,20 @@ def test_resolve_synthesis_request_prefers_cli_values() -> None:
     assert request.silero_settings.expand_short_units is False
 
 
-def test_resolve_synthesis_request_requires_voice_model() -> None:
+def test_resolve_synthesis_request_defaults_to_silero() -> None:
+    request = resolve_synthesis_request(input_path=Path("book.pdf"), pages=[1])
+
+    assert request.engine == TtsEngineKind.SILERO
+    assert request.voice_model is None
+
+
+def test_resolve_synthesis_request_requires_voice_model_for_explicit_piper() -> None:
     with pytest.raises(ValueError, match="voice model is required for Piper"):
-        resolve_synthesis_request(input_path=Path("book.pdf"), pages=[1])
+        resolve_synthesis_request(
+            input_path=Path("book.pdf"),
+            pages=[1],
+            engine=TtsEngineKind.PIPER,
+        )
 
 
 def test_resolve_synthesis_request_supports_silero_without_voice_model() -> None:
