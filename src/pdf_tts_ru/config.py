@@ -55,7 +55,7 @@ _KNOWN_CONFIG_KEYS = {
 class SynthesisConfig:
     """Optional TOML-backed defaults for the synth command."""
 
-    engine: TtsEngineKind = TtsEngineKind.PIPER
+    engine: TtsEngineKind = TtsEngineKind.SILERO
     voice_model: Path | None = None
     ffmpeg_bin: str = "ffmpeg"
     output_format: OutputFormat = OutputFormat.MP3
@@ -96,7 +96,7 @@ def load_synthesis_config(path: Path) -> SynthesisConfig:
         raise ValueError(f"unknown config keys in {path}: {', '.join(unknown)}")
 
     return SynthesisConfig(
-        engine=_get_enum(data, "engine", TtsEngineKind, TtsEngineKind.PIPER),
+        engine=_get_enum(data, "engine", TtsEngineKind, TtsEngineKind.SILERO),
         voice_model=_get_path(data, "voice_model"),
         ffmpeg_bin=_get_string(data, "ffmpeg_bin", "ffmpeg"),
         output_format=_get_enum(data, "output_format", OutputFormat, OutputFormat.MP3),

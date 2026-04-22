@@ -48,7 +48,12 @@ def build_parser() -> argparse.ArgumentParser:
         choices=[fmt.value for fmt in OutputFormat],
     )
     synth_parser.add_argument("--output-dir", type=Path)
-    synth_parser.add_argument("--voice", default=None, type=Path)
+    synth_parser.add_argument(
+        "--voice",
+        default=None,
+        type=Path,
+        help="Path to Piper voice model (*.onnx); used only with --engine piper",
+    )
     synth_parser.add_argument("--ffmpeg-bin")
     synth_parser.add_argument("--silero-model-id")
     synth_parser.add_argument("--silero-speaker")

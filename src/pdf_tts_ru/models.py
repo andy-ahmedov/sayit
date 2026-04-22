@@ -67,7 +67,7 @@ class SynthesisRequest:
     pages: list[int]
     split_mode: SplitMode
     output_format: OutputFormat
-    engine: TtsEngineKind = TtsEngineKind.PIPER
+    engine: TtsEngineKind = TtsEngineKind.SILERO
     voice_model: Path | None = None
     ffmpeg_bin: str = "ffmpeg"
     table_strategy: TableStrategy = TableStrategy.INLINE
