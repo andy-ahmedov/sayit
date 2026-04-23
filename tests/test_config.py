@@ -9,6 +9,7 @@ from pdf_tts_ru.config import load_synthesis_config, resolve_synthesis_request
 from pdf_tts_ru.models import (
     OutputFormat,
     SileroLineBreakMode,
+    SileroRate,
     SplitMode,
     TableStrategy,
     TtsEngineKind,
@@ -36,6 +37,7 @@ def test_load_synthesis_config_parses_supported_fields(tmp_path: Path) -> None:
                 'silero_model_id = "v5_4_ru"',
                 'silero_speaker = "kseniya"',
                 "silero_sample_rate = 24000",
+                'silero_rate = "normal"',
                 'silero_device = "cpu"',
                 "silero_transliterate_latin = false",
                 "silero_verbalize_numbers = false",
@@ -64,6 +66,7 @@ def test_load_synthesis_config_parses_supported_fields(tmp_path: Path) -> None:
     assert config.silero_model_id == "v5_4_ru"
     assert config.silero_speaker == "kseniya"
     assert config.silero_sample_rate == 24000
+    assert config.silero_rate == SileroRate.MEDIUM
     assert config.silero_device == "cpu"
     assert config.silero_transliterate_latin is False
     assert config.silero_verbalize_numbers is False
@@ -76,6 +79,14 @@ def test_load_synthesis_config_rejects_unknown_keys(tmp_path: Path) -> None:
     config_path.write_text('unexpected = "value"\n', encoding="utf-8")
 
     with pytest.raises(ValueError, match="unknown config keys"):
+        load_synthesis_config(config_path)
+
+
+def test_load_synthesis_config_rejects_invalid_silero_rate(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text('silero_rate = "warp"\n', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="unsupported Silero rate"):
         load_synthesis_config(config_path)
 
 
@@ -104,6 +115,7 @@ def test_resolve_synthesis_request_prefers_cli_values() -> None:
         length_scale=1.2,
         noise_scale=0.3,
         noise_w_scale=0.4,
+        silero_rate="x-slow",
         config=load_synthesis_config_from_text(
             "\n".join(
                 [
@@ -122,6 +134,7 @@ def test_resolve_synthesis_request_prefers_cli_values() -> None:
                     'silero_model_id = "v5_4_ru"',
                     'silero_speaker = "baya"',
                     "silero_sample_rate = 24000",
+                    'silero_rate = "faster"',
                     'silero_device = "cuda"',
                     "silero_transliterate_latin = false",
                     "silero_verbalize_numbers = false",
@@ -146,6 +159,7 @@ def test_resolve_synthesis_request_prefers_cli_values() -> None:
     assert request.silero_settings.model_id == "v5_4_ru"
     assert request.silero_settings.speaker == "baya"
     assert request.silero_settings.sample_rate == 24000
+    assert request.silero_settings.rate == SileroRate.X_SLOW
     assert request.silero_settings.device == "cuda"
     assert request.silero_settings.line_break_mode == SileroLineBreakMode.FLAT
     assert request.silero_settings.transliterate_latin is False
@@ -178,6 +192,7 @@ def test_resolve_synthesis_request_supports_silero_without_voice_model() -> None
         silero_model_id="v5_4_ru",
         silero_speaker="kseniya",
         silero_sample_rate=24000,
+        silero_rate="slower",
         silero_device="cpu",
         silero_line_break_mode=SileroLineBreakMode.PRESERVE,
         silero_transliterate_latin=False,
@@ -191,6 +206,7 @@ def test_resolve_synthesis_request_supports_silero_without_voice_model() -> None
     assert request.silero_settings.model_id == "v5_4_ru"
     assert request.silero_settings.speaker == "kseniya"
     assert request.silero_settings.sample_rate == 24000
+    assert request.silero_settings.rate == SileroRate.SLOW
     assert request.silero_settings.device == "cpu"
     assert request.silero_settings.line_break_mode == SileroLineBreakMode.PRESERVE
     assert request.silero_settings.transliterate_latin is False

@@ -7,6 +7,7 @@ from array import array
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from xml.sax.saxutils import escape
 
 from pdf_tts_ru.models import SileroSynthesisSettings
 from pdf_tts_ru.tts.silero_text import prepare_text_for_silero
@@ -94,11 +95,15 @@ class SileroEngine:
 
     def _synthesize_chunk(self, model: Any, text: str) -> bytes:
         try:
-            audio = model.apply_tts(
-                text=text,
-                speaker=self.settings.speaker,
-                sample_rate=self.settings.sample_rate,
-            )
+            kwargs: dict[str, Any] = {
+                "speaker": self.settings.speaker,
+                "sample_rate": self.settings.sample_rate,
+            }
+            if self.settings.rate is None:
+                kwargs["text"] = text
+            else:
+                kwargs["ssml_text"] = _wrap_text_in_ssml(text, rate=self.settings.rate.value)
+            audio = model.apply_tts(**kwargs)
         except Exception as exc:
             raise RuntimeError(
                 "failed to synthesize with Silero "
@@ -158,6 +163,11 @@ def _to_pcm16_bytes(audio: Any) -> bytes:
         clamped = max(-1.0, min(1.0, value))
         pcm.append(int(clamped * 32767))
     return pcm.tobytes()
+
+
+def _wrap_text_in_ssml(text: str, *, rate: str) -> str:
+    escaped_text = escape(text)
+    return f'<speak><prosody rate="{rate}">{escaped_text}</prosody></speak>'
 
 
 def _split_text_into_chunks(text: str, *, max_chars: int) -> list[str]:

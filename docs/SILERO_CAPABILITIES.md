@@ -25,6 +25,7 @@
 - `silero_model_id`
 - `silero_speaker`
 - `silero_sample_rate`
+- `silero_rate`
 - `silero_device`
 - `silero_line_break_mode`
 - `silero_transliterate_latin`
@@ -81,6 +82,7 @@ engine = "silero"
 silero_model_id = "v5_5_ru"
 silero_speaker = "xenia"
 silero_sample_rate = 48000
+# silero_rate = "normal"
 silero_device = "cpu"
 silero_line_break_mode = "smart"
 silero_transliterate_latin = true
@@ -127,18 +129,6 @@ python -m pdf_tts_ru.cli synth \
 
 ### 3. `silero_sample_rate`
 
-### 4. `silero_line_break_mode`
-
-Этот параметр управляет тем, как проект готовит переносы строк перед подачей текста в Silero.
-
-Поддерживаются режимы:
-
-- `preserve`: оставить исходные переносы как есть;
-- `smart`: сгладить только технические переносы без пунктуации;
-- `flat`: максимально склеить строки внутри прозы.
-
-Для born-digital PDF по умолчанию выбран `smart`, потому что он убирает искусственные паузы в середине фразы, но сохраняет абзацы и списки.
-
 В проекте для Silero поддерживаются:
 
 - `8000`
@@ -160,7 +150,59 @@ silero_sample_rate = 48000
 output_format = "wav"
 ```
 
-### 4. Формат вывода
+### 4. `silero_rate`
+
+Этот параметр управляет именно скоростью речи Silero через SSML `prosody rate`.
+
+Поддерживаются канонические значения:
+
+- `x-slow`
+- `slow`
+- `medium`
+- `fast`
+- `x-fast`
+
+Также проект принимает alias-значения:
+
+- `normal` -> `medium`
+- `slower` -> `slow`
+- `faster` -> `fast`
+
+Практический смысл:
+
+- `silero_rate` меняет темп произнесения текста;
+- `silero_sample_rate` не меняет темп речи и отвечает за частоту дискретизации аудио;
+- если `silero_rate` не задан, проект оставляет текущий путь Silero без явной настройки темпа.
+
+Пример конфига:
+
+```toml
+silero_rate = "slow"
+```
+
+Пример CLI:
+
+```bash
+python -m pdf_tts_ru.cli synth \
+  --input VPG_5.pdf \
+  --pages 1 \
+  --engine silero \
+  --silero-rate normal
+```
+
+### 5. `silero_line_break_mode`
+
+Этот параметр управляет тем, как проект готовит переносы строк перед подачей текста в Silero.
+
+Поддерживаются режимы:
+
+- `preserve`: оставить исходные переносы как есть;
+- `smart`: сгладить только технические переносы без пунктуации;
+- `flat`: максимально склеить строки внутри прозы.
+
+Для born-digital PDF по умолчанию выбран `smart`, потому что он убирает искусственные паузы в середине фразы, но сохраняет абзацы и списки.
+
+### 6. Формат вывода
 
 Это уже не качество самого синтеза, а качество сохраненного результата.
 

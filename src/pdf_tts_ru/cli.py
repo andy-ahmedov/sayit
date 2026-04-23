@@ -11,6 +11,7 @@ from pdf_tts_ru.models import (
     SplitMode,
     TableStrategy,
     TtsEngineKind,
+    silero_rate_choices,
 )
 from pdf_tts_ru.page_ranges import parse_page_spec
 from pdf_tts_ru.pipeline import PdfTtsPipeline
@@ -58,6 +59,11 @@ def build_parser() -> argparse.ArgumentParser:
     synth_parser.add_argument("--silero-model-id")
     synth_parser.add_argument("--silero-speaker")
     synth_parser.add_argument("--silero-sample-rate", type=int)
+    synth_parser.add_argument(
+        "--silero-rate",
+        choices=silero_rate_choices(),
+        help="Silero speech rate: x-slow, slow, medium, fast, x-fast, or aliases normal/slower/faster",
+    )
     synth_parser.add_argument("--silero-device")
     synth_parser.add_argument(
         "--silero-line-break-mode",
@@ -140,6 +146,7 @@ def main() -> None:
                 silero_model_id=args.silero_model_id,
                 silero_speaker=args.silero_speaker,
                 silero_sample_rate=args.silero_sample_rate,
+                silero_rate=args.silero_rate,
                 silero_device=args.silero_device,
                 silero_line_break_mode=(
                     SileroLineBreakMode(args.silero_line_break_mode)

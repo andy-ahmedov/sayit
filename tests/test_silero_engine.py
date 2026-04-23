@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import types
 import wave
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
-from pdf_tts_ru.models import SileroLineBreakMode, SileroSynthesisSettings
+from pdf_tts_ru.models import SileroLineBreakMode, SileroRate, SileroSynthesisSettings
 from pdf_tts_ru.tts.silero_engine import SileroEngine
 from pdf_tts_ru.tts.silero_text import (
     latin_word_to_russian,
@@ -16,16 +17,38 @@ from pdf_tts_ru.tts.silero_text import (
 )
 
 
+@dataclass
+class FakeApplyCall:
+    text: str | None
+    ssml_text: str | None
+    speaker: str
+    sample_rate: int
+
+
 class FakeModel:
     def __init__(self) -> None:
         self.to_calls: list[object] = []
-        self.apply_calls: list[tuple[str, str, int]] = []
+        self.apply_calls: list[FakeApplyCall] = []
 
     def to(self, device: object) -> None:
         self.to_calls.append(device)
 
-    def apply_tts(self, *, text: str, speaker: str, sample_rate: int):
-        self.apply_calls.append((text, speaker, sample_rate))
+    def apply_tts(
+        self,
+        *,
+        text: str | None = None,
+        ssml_text: str | None = None,
+        speaker: str,
+        sample_rate: int,
+    ):
+        self.apply_calls.append(
+            FakeApplyCall(
+                text=text,
+                ssml_text=ssml_text,
+                speaker=speaker,
+                sample_rate=sample_rate,
+            )
+        )
         return [0.0, 0.25, -0.25, 0.5]
 
 
@@ -56,8 +79,8 @@ def test_silero_engine_loads_once_and_writes_wav(tmp_path: Path, monkeypatch: py
     assert load_calls == [("ru", "v5_5_ru")]
     assert fake_model.to_calls == ["device:cpu"]
     assert fake_model.apply_calls == [
-        ("хелло", "xenia", 48000),
-        ("ворлд", "xenia", 48000),
+        FakeApplyCall(text="хелло", ssml_text=None, speaker="xenia", sample_rate=48000),
+        FakeApplyCall(text="ворлд", ssml_text=None, speaker="xenia", sample_rate=48000),
     ]
     with wave.open(str(tmp_path / "first.wav"), "rb") as wav_file:
         assert wav_file.getframerate() == 48000
@@ -82,7 +105,8 @@ def test_silero_engine_preprocesses_latin_words_numbers_abbreviations_and_units(
     engine = SileroEngine()
     engine.synthesize_to_wav("VPG_5 PDF ВПГ 42 3.14 10% 5 нм", tmp_path / "prep.wav")
 
-    prepared_text, speaker, sample_rate = fake_model.apply_calls[0]
+    prepared_text = fake_model.apply_calls[0].text
+    assert prepared_text is not None
     assert "ви пи джи" in prepared_text
     assert "пи ди эф" in prepared_text
     assert "вэ пэ гэ" in prepared_text
@@ -90,8 +114,8 @@ def test_silero_engine_preprocesses_latin_words_numbers_abbreviations_and_units(
     assert "три запятая один четыре" in prepared_text
     assert "десять процентов" in prepared_text
     assert "пять нанометров" in prepared_text
-    assert speaker == "xenia"
-    assert sample_rate == 48000
+    assert fake_model.apply_calls[0].speaker == "xenia"
+    assert fake_model.apply_calls[0].sample_rate == 48000
 
 
 def test_silero_engine_can_disable_text_preprocessing_features(
@@ -119,8 +143,29 @@ def test_silero_engine_can_disable_text_preprocessing_features(
     )
     engine.synthesize_to_wav("ВПГ\nhello 42 нм", tmp_path / "raw.wav")
 
-    prepared_text, _speaker, _sample_rate = fake_model.apply_calls[0]
-    assert prepared_text == "ВПГ\nhello 42 нм"
+    assert fake_model.apply_calls[0].text == "ВПГ\nhello 42 нм"
+
+
+def test_silero_engine_uses_ssml_when_rate_is_configured(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fake_model = FakeModel()
+
+    def fake_import_module(name: str):
+        if name == "torch":
+            return types.SimpleNamespace(device=lambda value: value)
+        if name == "silero":
+            return types.SimpleNamespace(silero_tts=lambda **_: (fake_model, "example"))
+        raise ModuleNotFoundError(name)
+
+    monkeypatch.setattr("pdf_tts_ru.tts.silero_engine.importlib.import_module", fake_import_module)
+
+    engine = SileroEngine(SileroSynthesisSettings(rate=SileroRate.SLOW))
+    engine.synthesize_to_wav("A & B", tmp_path / "ssml.wav")
+
+    call = fake_model.apply_calls[0]
+    assert call.text is None
+    assert call.ssml_text == '<speak><prosody rate="slow">эй &amp; би</prosody></speak>'
 
 
 def test_silero_engine_requires_non_empty_text(tmp_path: Path) -> None:
@@ -152,7 +197,13 @@ def test_silero_engine_rejects_unsupported_sample_rate(tmp_path: Path) -> None:
 def test_silero_engine_surfaces_speaker_errors(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     fake_model = FakeModel()
 
-    def fake_apply_tts(*, text: str, speaker: str, sample_rate: int):
+    def fake_apply_tts(
+        *,
+        text: str | None = None,
+        ssml_text: str | None = None,
+        speaker: str,
+        sample_rate: int,
+    ):
         raise ValueError(f"unknown speaker: {speaker}")
 
     fake_model.apply_tts = fake_apply_tts  # type: ignore[method-assign]
@@ -288,9 +339,23 @@ def test_silero_engine_retries_when_model_reports_text_too_long(
 ) -> None:
     fake_model = FakeModel()
 
-    def fake_apply_tts(*, text: str, speaker: str, sample_rate: int):
-        fake_model.apply_calls.append((text, speaker, sample_rate))
-        if len(text) > 120:
+    def fake_apply_tts(
+        *,
+        text: str | None = None,
+        ssml_text: str | None = None,
+        speaker: str,
+        sample_rate: int,
+    ):
+        fake_model.apply_calls.append(
+            FakeApplyCall(
+                text=text,
+                ssml_text=ssml_text,
+                speaker=speaker,
+                sample_rate=sample_rate,
+            )
+        )
+        payload = ssml_text or text or ""
+        if len(payload) > 120:
             raise Exception("Model couldn't generate your text, probably it's too long")
         return [0.0, 0.25, -0.25, 0.5]
 
@@ -305,12 +370,13 @@ def test_silero_engine_retries_when_model_reports_text_too_long(
 
     monkeypatch.setattr("pdf_tts_ru.tts.silero_engine.importlib.import_module", fake_import_module)
 
-    engine = SileroEngine()
+    engine = SileroEngine(SileroSynthesisSettings(rate=SileroRate.FAST))
     long_text = "\n".join(f"Строка {index}." for index in range(1, 30))
 
     engine.synthesize_to_wav(long_text, tmp_path / "retry.wav")
 
     assert len(fake_model.apply_calls) > 2
+    assert all(call.ssml_text is not None for call in fake_model.apply_calls)
     with wave.open(str(tmp_path / "retry.wav"), "rb") as wav_file:
         assert wav_file.getframerate() == 48000
         assert wav_file.getnframes() > 4

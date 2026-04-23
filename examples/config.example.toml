@@ -9,6 +9,7 @@ pause_between_pages_ms = 700
 silero_model_id = "v5_5_ru"
 silero_speaker = "xenia"
 silero_sample_rate = 48000
+# silero_rate = "normal"
 silero_device = "cpu"
 silero_line_break_mode = "smart"
 silero_transliterate_latin = true

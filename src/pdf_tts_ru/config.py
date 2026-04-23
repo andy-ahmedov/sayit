@@ -6,9 +6,11 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 from pdf_tts_ru.models import (
+    normalize_silero_rate,
     OutputFormat,
     PiperSynthesisSettings,
     SileroLineBreakMode,
+    SileroRate,
     SileroSynthesisSettings,
     SplitMode,
     SynthesisRequest,
@@ -42,6 +44,7 @@ _KNOWN_CONFIG_KEYS = {
     "silero_model_id",
     "silero_speaker",
     "silero_sample_rate",
+    "silero_rate",
     "silero_device",
     "silero_line_break_mode",
     "silero_transliterate_latin",
@@ -70,6 +73,7 @@ class SynthesisConfig:
     silero_model_id: str = "v5_5_ru"
     silero_speaker: str = "xenia"
     silero_sample_rate: int = 48000
+    silero_rate: SileroRate | None = None
     silero_device: str = "cpu"
     silero_line_break_mode: SileroLineBreakMode = SileroLineBreakMode.SMART
     silero_transliterate_latin: bool = True
@@ -111,6 +115,7 @@ def load_synthesis_config(path: Path) -> SynthesisConfig:
         silero_model_id=_get_string(data, "silero_model_id", "v5_5_ru"),
         silero_speaker=_get_string(data, "silero_speaker", "xenia"),
         silero_sample_rate=_get_int(data, "silero_sample_rate", 48000),
+        silero_rate=normalize_silero_rate(_get_optional_string(data, "silero_rate")),
         silero_device=_get_string(data, "silero_device", "cpu"),
         silero_line_break_mode=_get_enum(
             data,
@@ -148,6 +153,7 @@ def resolve_synthesis_request(
     silero_model_id: str | None = None,
     silero_speaker: str | None = None,
     silero_sample_rate: int | None = None,
+    silero_rate: str | SileroRate | None = None,
     silero_device: str | None = None,
     silero_line_break_mode: SileroLineBreakMode | None = None,
     silero_transliterate_latin: bool | None = None,
@@ -177,6 +183,12 @@ def resolve_synthesis_request(
     )
     if resolved_silero_sample_rate <= 0:
         raise ValueError("silero_sample_rate must be positive")
+
+    resolved_silero_rate = (
+        normalize_silero_rate(silero_rate)
+        if silero_rate is not None
+        else defaults.silero_rate
+    )
 
     if resolved_engine == TtsEngineKind.PIPER and resolved_voice_model is None:
         raise ValueError(
@@ -208,6 +220,7 @@ def resolve_synthesis_request(
             model_id=(silero_model_id if silero_model_id is not None else defaults.silero_model_id),
             speaker=(silero_speaker if silero_speaker is not None else defaults.silero_speaker),
             sample_rate=resolved_silero_sample_rate,
+            rate=resolved_silero_rate,
             device=silero_device if silero_device is not None else defaults.silero_device,
             line_break_mode=(
                 silero_line_break_mode
@@ -249,6 +262,15 @@ def _get_path(data: dict[str, Any], key: str) -> Path | None:
 
 def _get_string(data: dict[str, Any], key: str, default: str) -> str:
     value = data.get(key, default)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"config key {key!r} must be a non-empty string")
+    return value
+
+
+def _get_optional_string(data: dict[str, Any], key: str) -> str | None:
+    value = data.get(key)
+    if value is None:
+        return None
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"config key {key!r} must be a non-empty string")
     return value
