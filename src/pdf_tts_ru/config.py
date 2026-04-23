@@ -134,6 +134,51 @@ def load_synthesis_config(path: Path) -> SynthesisConfig:
     )
 
 
+def render_synthesis_config(config: SynthesisConfig) -> str:
+    """Render a synthesis config dataclass into a TOML document."""
+
+    fields: list[tuple[str, Any]] = [
+        ("engine", config.engine.value),
+        ("voice_model", config.voice_model),
+        ("ffmpeg_bin", config.ffmpeg_bin),
+        ("output_format", config.output_format.value),
+        ("split_mode", config.split_mode.value),
+        ("table_strategy", config.table_strategy.value),
+        ("announce_page_numbers", config.announce_page_numbers),
+        ("pause_between_pages_ms", config.pause_between_pages_ms),
+        ("length_scale", config.length_scale),
+        ("noise_scale", config.noise_scale),
+        ("noise_w_scale", config.noise_w_scale),
+        ("output_dir", config.output_dir),
+        ("silero_model_id", config.silero_model_id),
+        ("silero_speaker", config.silero_speaker),
+        ("silero_sample_rate", config.silero_sample_rate),
+        ("silero_rate", config.silero_rate.value if config.silero_rate is not None else None),
+        ("silero_device", config.silero_device),
+        ("silero_line_break_mode", config.silero_line_break_mode.value),
+        ("silero_transliterate_latin", config.silero_transliterate_latin),
+        ("silero_verbalize_numbers", config.silero_verbalize_numbers),
+        (
+            "silero_spell_cyrillic_abbreviations",
+            config.silero_spell_cyrillic_abbreviations,
+        ),
+        ("silero_expand_short_units", config.silero_expand_short_units),
+    ]
+    lines = [
+        f"{key} = {_format_toml_value(value)}"
+        for key, value in fields
+        if value is not None
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def save_synthesis_config(path: Path, config: SynthesisConfig) -> None:
+    """Write a synthesis config dataclass to a TOML file."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(render_synthesis_config(config), encoding="utf-8")
+
+
 def resolve_synthesis_request(
     *,
     input_path: Path,
@@ -312,3 +357,20 @@ def _get_enum(
     except ValueError as exc:
         allowed = ", ".join(item.value for item in enum_cls)
         raise ValueError(f"invalid {key!r}: {value!r}; expected one of: {allowed}") from exc
+
+
+def _format_toml_value(value: Any) -> str:
+    if isinstance(value, Path):
+        return _quote_toml_string(str(value))
+    if isinstance(value, str):
+        return _quote_toml_string(value)
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int | float):
+        return str(value)
+    raise TypeError(f"unsupported TOML value type: {type(value)!r}")
+
+
+def _quote_toml_string(value: str) -> str:
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'

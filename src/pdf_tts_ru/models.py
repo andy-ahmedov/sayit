@@ -42,6 +42,14 @@ class SileroRate(StrEnum):
     X_FAST = "x-fast"
 
 
+class ProgressStage(StrEnum):
+    INSPECTING = "inspecting"
+    EXTRACTING = "extracting"
+    SYNTHESIZING = "synthesizing"
+    EXPORTING = "exporting"
+    DONE = "done"
+
+
 _SILERO_RATE_ALIASES = {
     "normal": SileroRate.MEDIUM,
     "slower": SileroRate.SLOW,
@@ -120,3 +128,14 @@ class SynthesisRequest:
     pause_between_pages_ms: int = 0
     tts_settings: PiperSynthesisSettings = field(default_factory=PiperSynthesisSettings)
     silero_settings: SileroSynthesisSettings = field(default_factory=SileroSynthesisSettings)
+
+
+@dataclass(slots=True)
+class ProgressEvent:
+    """A coarse-grained progress update emitted during synthesis."""
+
+    stage: ProgressStage
+    message: str
+    page_number: int | None = None
+    table_index: int | None = None
+    output_path: Path | None = None

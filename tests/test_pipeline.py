@@ -9,6 +9,7 @@ import pytest
 from pdf_tts_ru.models import (
     OutputFormat,
     PiperSynthesisSettings,
+    ProgressStage,
     SileroSynthesisSettings,
     SplitMode,
     SynthesisRequest,
@@ -211,6 +212,33 @@ def test_pipeline_uses_silero_as_default_engine(tmp_path: Path, monkeypatch: pyt
     PdfTtsPipeline().run(request)
 
     assert created_for == [TtsEngineKind.SILERO]
+
+
+def test_pipeline_emits_progress_events(tmp_path: Path) -> None:
+    pdf_path = create_prose_pdf(tmp_path / "sample.pdf")
+    events = []
+    request = SynthesisRequest(
+        input_path=pdf_path,
+        output_dir=tmp_path / "out",
+        pages=[1],
+        split_mode=SplitMode.PER_PAGE,
+        output_format=OutputFormat.WAV,
+        engine=TtsEngineKind.PIPER,
+        voice_model=Path("unused.onnx"),
+        table_strategy=TableStrategy.SKIP,
+        tts_settings=PiperSynthesisSettings(),
+    )
+
+    PdfTtsPipeline(engine=FakeEngine(), progress_callback=events.append).run(request)
+
+    assert [event.stage for event in events] == [
+        ProgressStage.EXTRACTING,
+        ProgressStage.SYNTHESIZING,
+        ProgressStage.EXPORTING,
+        ProgressStage.DONE,
+    ]
+    assert events[1].page_number == 1
+    assert events[2].output_path == tmp_path / "out" / "sample_page_0001.wav"
 
 
 def create_prose_pdf(path: Path) -> Path:

@@ -3,10 +3,11 @@ from __future__ import annotations
 import shutil
 import tempfile
 from pathlib import Path
+from typing import Callable
 
 from pdf_tts_ru.audio import concat_audio, convert_audio, write_silence_wav
 from pdf_tts_ru.document_extract import extract_document_pages
-from pdf_tts_ru.models import SynthesisRequest
+from pdf_tts_ru.models import ProgressEvent, ProgressStage, SynthesisRequest
 from pdf_tts_ru.normalize import normalize_text_for_speech
 from pdf_tts_ru.output_plan import build_prose_output_path, build_table_output_path
 from pdf_tts_ru.pdf_extract import SegmentKind
@@ -17,13 +18,22 @@ from pdf_tts_ru.tts.factory import create_tts_engine
 class PdfTtsPipeline:
     """Orchestrates extraction, normalization, TTS, and audio export."""
 
-    def __init__(self, engine: TtsEngine | None = None) -> None:
+    def __init__(
+        self,
+        engine: TtsEngine | None = None,
+        progress_callback: Callable[[ProgressEvent], None] | None = None,
+    ) -> None:
         self._engine = engine
+        self._progress_callback = progress_callback
 
     def run(self, request: SynthesisRequest) -> list[Path]:
         """Run the synthesis pipeline."""
 
         request.output_dir.mkdir(parents=True, exist_ok=True)
+        self._emit(
+            ProgressStage.EXTRACTING,
+            f"Extracting text from {request.input_path.name}",
+        )
         extracted_pages = extract_document_pages(
             request.input_path,
             request.pages,
@@ -43,6 +53,11 @@ class PdfTtsPipeline:
             for page in extracted_pages:
                 prose_text = _join_prose_segments(page.segments)
                 if prose_text:
+                    self._emit(
+                        ProgressStage.SYNTHESIZING,
+                        f"Synthesizing page {page.page_number}",
+                        page_number=page.page_number,
+                    )
                     rendered_text = _prepare_text(
                         prose_text,
                         page.page_number,
@@ -59,6 +74,12 @@ class PdfTtsPipeline:
                             split_mode=request.split_mode,
                             output_format=request.output_format,
                         )
+                        self._emit(
+                            ProgressStage.EXPORTING,
+                            f"Exporting page {page.page_number} to {final_output.name}",
+                            page_number=page.page_number,
+                            output_path=final_output,
+                        )
                         _finalize_audio(
                             prose_wav,
                             final_output,
@@ -74,6 +95,12 @@ class PdfTtsPipeline:
                         continue
 
                     table_index += 1
+                    self._emit(
+                        ProgressStage.SYNTHESIZING,
+                        f"Synthesizing table {table_index} on page {page.page_number}",
+                        page_number=page.page_number,
+                        table_index=table_index,
+                    )
                     rendered_text = _prepare_text(
                         segment.text,
                         page.page_number,
@@ -89,6 +116,13 @@ class PdfTtsPipeline:
                         page_number=page.page_number,
                         table_index=table_index,
                         output_format=request.output_format,
+                    )
+                    self._emit(
+                        ProgressStage.EXPORTING,
+                        f"Exporting table {table_index} on page {page.page_number}",
+                        page_number=page.page_number,
+                        table_index=table_index,
+                        output_path=final_output,
                     )
                     _finalize_audio(table_wav, final_output, ffmpeg_bin=request.ffmpeg_bin)
                     table_outputs.append(final_output)
@@ -108,6 +142,11 @@ class PdfTtsPipeline:
                     split_mode=request.split_mode,
                     output_format=request.output_format,
                 )
+                self._emit(
+                    ProgressStage.EXPORTING,
+                    f"Exporting merged audio to {final_output.name}",
+                    output_path=final_output,
+                )
                 _finalize_audio(merged_wav, final_output, ffmpeg_bin=request.ffmpeg_bin)
                 prose_outputs.append(final_output)
 
@@ -115,7 +154,32 @@ class PdfTtsPipeline:
         if not outputs:
             raise ValueError("no speechable text found in selected pages")
 
+        self._emit(
+            ProgressStage.DONE,
+            f"Created {len(outputs)} audio file(s)",
+        )
         return outputs
+
+    def _emit(
+        self,
+        stage: ProgressStage,
+        message: str,
+        *,
+        page_number: int | None = None,
+        table_index: int | None = None,
+        output_path: Path | None = None,
+    ) -> None:
+        if self._progress_callback is None:
+            return
+        self._progress_callback(
+            ProgressEvent(
+                stage=stage,
+                message=message,
+                page_number=page_number,
+                table_index=table_index,
+                output_path=output_path,
+            )
+        )
 
 
 def _join_prose_segments(segments) -> str:

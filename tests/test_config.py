@@ -5,7 +5,12 @@ from pathlib import Path
 
 import pytest
 
-from pdf_tts_ru.config import load_synthesis_config, resolve_synthesis_request
+from pdf_tts_ru.config import (
+    load_synthesis_config,
+    render_synthesis_config,
+    resolve_synthesis_request,
+    save_synthesis_config,
+)
 from pdf_tts_ru.models import (
     OutputFormat,
     SileroLineBreakMode,
@@ -98,6 +103,46 @@ def test_load_synthesis_config_defaults_to_silero_when_engine_is_omitted(tmp_pat
 
     assert config.engine == TtsEngineKind.SILERO
     assert config.output_dir == Path("audio")
+
+
+def test_save_synthesis_config_round_trips(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    original = load_synthesis_config_from_text(
+        "\n".join(
+            [
+                'engine = "piper"',
+                'voice_model = "voices/ru.onnx"',
+                'output_format = "wav"',
+                'split_mode = "merged"',
+                'table_strategy = "skip"',
+                "announce_page_numbers = true",
+                "pause_between_pages_ms = 300",
+                'output_dir = "audio/out"',
+                'silero_rate = "fast"',
+            ]
+        )
+    )
+
+    save_synthesis_config(config_path, original)
+    restored = load_synthesis_config(config_path)
+
+    assert restored == original
+
+
+def test_render_synthesis_config_skips_optional_none_fields() -> None:
+    rendered = render_synthesis_config(
+        load_synthesis_config_from_text(
+            "\n".join(
+                [
+                    'engine = "silero"',
+                    'output_dir = "audio"',
+                ]
+            )
+        )
+    )
+
+    assert 'voice_model = "voices/ru.onnx"' not in rendered
+    assert "silero_rate =" not in rendered
 
 
 def test_resolve_synthesis_request_prefers_cli_values() -> None:

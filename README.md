@@ -31,6 +31,35 @@ python -m pdf_tts_ru.cli synth --input file.pdf --pages 1-5 --config config.toml
 CLI > config.toml > встроенные defaults
 ```
 
+## Windows Desktop App
+
+Проект теперь включает desktop UI для Windows поверх того же Python-ядра, что использует CLI.
+
+Что умеет GUI:
+
+- выбирать входной файл `.pdf`, `.docx`, `.md`, `.txt`;
+- переключать `Silero` и `Piper`;
+- менять основные параметры синтеза прямо в форме;
+- загружать и сохранять `TOML`-конфиги без ручного редактирования;
+- выбирать папку результата;
+- запускать озвучку в фоне и показывать статус;
+- открывать папку с готовыми аудиофайлами после завершения.
+
+Быстрый запуск из репозитория:
+
+```bash
+python -m pip install -e '.[desktop]'
+python -m pdf_tts_ru.gui.main
+```
+
+Или через entrypoint:
+
+```bash
+pdf-tts-ru-gui
+```
+
+Подробности по Windows packaging и bundling `ffmpeg.exe` лежат в [docs/WINDOWS_DESKTOP.md](docs/WINDOWS_DESKTOP.md).
+
 ## Поддерживаемые Входы
 
 - `.pdf`: основной и лучше всего поддерживаемый формат;

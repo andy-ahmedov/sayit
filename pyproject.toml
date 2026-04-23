@@ -24,6 +24,10 @@ dev = [
   "pytest>=8.0.0",
   "ruff>=0.6.0",
 ]
+desktop = [
+  "PyInstaller>=6.0.0",
+  "PySide6>=6.8.0",
+]
 silero = [
   "silero>=0.5.0",
   "torch>=2.0.0",
@@ -31,6 +35,7 @@ silero = [
 
 [project.scripts]
 pdf-tts-ru = "pdf_tts_ru.cli:main"
+pdf-tts-ru-gui = "pdf_tts_ru.gui.main:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
