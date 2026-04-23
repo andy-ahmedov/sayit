@@ -145,6 +145,50 @@ def test_pipeline_supports_text_input(tmp_path: Path) -> None:
     assert outputs == [tmp_path / "out" / "sample_page_0001.wav"]
 
 
+def test_pipeline_does_not_announce_page_numbers_for_markdown(tmp_path: Path) -> None:
+    markdown_path = tmp_path / "sample.md"
+    markdown_path.write_text("# Заголовок\n\nТекст **документа**.", encoding="utf-8")
+    engine = FakeEngine()
+    request = SynthesisRequest(
+        input_path=markdown_path,
+        output_dir=tmp_path / "out",
+        pages=[1],
+        split_mode=SplitMode.PER_PAGE,
+        output_format=OutputFormat.WAV,
+        engine=TtsEngineKind.PIPER,
+        voice_model=Path("unused.onnx"),
+        table_strategy=TableStrategy.SKIP,
+        announce_page_numbers=True,
+        tts_settings=PiperSynthesisSettings(),
+    )
+
+    PdfTtsPipeline(engine=engine).run(request)
+
+    assert engine.calls == ["Заголовок\nТекст документа."]
+
+
+def test_pipeline_does_not_announce_page_numbers_for_text(tmp_path: Path) -> None:
+    text_path = tmp_path / "sample.txt"
+    text_path.write_text("Первая строка.\n\nВторая строка.", encoding="utf-8")
+    engine = FakeEngine()
+    request = SynthesisRequest(
+        input_path=text_path,
+        output_dir=tmp_path / "out",
+        pages=[1],
+        split_mode=SplitMode.PER_PAGE,
+        output_format=OutputFormat.WAV,
+        engine=TtsEngineKind.PIPER,
+        voice_model=Path("unused.onnx"),
+        table_strategy=TableStrategy.SKIP,
+        announce_page_numbers=True,
+        tts_settings=PiperSynthesisSettings(),
+    )
+
+    PdfTtsPipeline(engine=engine).run(request)
+
+    assert engine.calls == ["Первая строка.\nВторая строка."]
+
+
 def test_pipeline_uses_silero_as_default_engine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     pdf_path = create_prose_pdf(tmp_path / "sample.pdf")
     request = SynthesisRequest(

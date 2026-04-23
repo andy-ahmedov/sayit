@@ -32,6 +32,7 @@ class PdfTtsPipeline:
         engine = self._engine or create_tts_engine(request)
         prose_outputs: list[Path] = []
         table_outputs: list[Path] = []
+        announce_page_numbers = _should_announce_page_numbers(request)
 
         with tempfile.TemporaryDirectory(
             prefix="pdf_tts_ru_", dir=request.output_dir
@@ -45,7 +46,7 @@ class PdfTtsPipeline:
                     rendered_text = _prepare_text(
                         prose_text,
                         page.page_number,
-                        announce_page_numbers=request.announce_page_numbers,
+                        announce_page_numbers=announce_page_numbers,
                     )
                     prose_wav = temp_dir / f"page_{page.page_number:04d}_prose.wav"
                     engine.synthesize_to_wav(rendered_text, prose_wav)
@@ -76,7 +77,7 @@ class PdfTtsPipeline:
                     rendered_text = _prepare_text(
                         segment.text,
                         page.page_number,
-                        announce_page_numbers=request.announce_page_numbers,
+                        announce_page_numbers=announce_page_numbers,
                     )
                     table_wav = temp_dir / (
                         f"page_{page.page_number:04d}_table_{table_index:02d}.wav"
@@ -128,6 +129,12 @@ def _prepare_text(text: str, page_number: int, *, announce_page_numbers: bool) -
     if not announce_page_numbers:
         return normalized_text
     return f"Страница {page_number}.\n\n{normalized_text}"
+
+
+def _should_announce_page_numbers(request: SynthesisRequest) -> bool:
+    if not request.announce_page_numbers:
+        return False
+    return request.input_path.suffix.lower() not in {".md", ".txt"}
 
 
 def _with_silence_between_pages(
